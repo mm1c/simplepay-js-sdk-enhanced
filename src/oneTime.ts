@@ -44,8 +44,10 @@ const startPayment = async (
   const { MERCHANT_KEY, MERCHANT_ID, API_URL_PAYMENT, SDK_VERSION } =
     getValidatedConfig("SimplePay/startPayment", currency, { paymentData });
 
-    const timeout =
-      config.timeout && config.timeout > 0 && config.timeout <= 120 ? config.timeout : 30;
+  const timeout =
+    config.timeout && config.timeout > 0 && config.timeout <= 120
+      ? config.timeout
+      : 30;
 
   const requestBody: SimplePayRequestBody = {
     salt: crypto.randomBytes(16).toString("hex"),
@@ -68,9 +70,7 @@ const startPayment = async (
   return makeSimplePayRequest(API_URL_PAYMENT, requestBody, MERCHANT_KEY!);
 };
 
-const cancelTransaction = async (
-  paymentData: PaymentData
-) => {
+const cancelTransaction = async (paymentData: PaymentData) => {
   const currency = paymentData.currency || "HUF";
   const { MERCHANT_KEY, MERCHANT_ID, SDK_VERSION, API_URL_TRANSACTION_CANCEL } =
     getValidatedConfig(
@@ -115,12 +115,8 @@ const refundTransaction = async (paymentData: PaymentData) => {
       },
     );
 
-  if (
-    !paymentData.transactionId ||
-    paymentData.transactionId.trim().length !== 9 ||
-    isNaN(parseInt(paymentData.transactionId))
-  ) {
-    throw new Error("transactionId is required for refundTransaction");
+  if (!paymentData.orderRef || paymentData.orderRef.trim().length === 0) {
+    throw new Error("orderRef is required for refundTransaction");
   }
 
   const requestBody: SimplePayRefundTransactionRequestBody = {
@@ -129,7 +125,12 @@ const refundTransaction = async (paymentData: PaymentData) => {
     currency: currency.replace("_SZEP", "") as Currency,
     sdkVersion: SDK_VERSION,
     orderRef: paymentData.orderRef,
-    refundTotal: paymentData.refundTotal && !isNaN(Number(paymentData.refundTotal)) && Number(paymentData.refundTotal) > 0 ? Number(paymentData.refundTotal) : 0,
+    refundTotal:
+      paymentData.refundTotal &&
+      !isNaN(Number(paymentData.refundTotal)) &&
+      Number(paymentData.refundTotal) > 0
+        ? Number(paymentData.refundTotal)
+        : 0,
   };
 
   return makeSimplePayRefundTransactionRequest(
