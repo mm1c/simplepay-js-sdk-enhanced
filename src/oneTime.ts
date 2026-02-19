@@ -4,6 +4,7 @@ import {
   PaymentConfig,
   PaymentData,
   SimplePayCancelTransactionRequestBody,
+  SimplePayRefundTransactionRequestBody,
   SimplePayRequestBody,
 } from "./types";
 import {
@@ -12,6 +13,7 @@ import {
   toISO8601DateString,
   makeSimplePayRequest,
   makeSimplePayCancelTransactionRequest,
+  makeSimplePayRefundTransactionRequest,
 } from "./utils";
 
 const getValidatedConfig = (
@@ -102,4 +104,39 @@ const cancelTransaction = async (
   );
 };
 
-export { startPayment, cancelTransaction };
+const refundTransaction = async (paymentData: PaymentData) => {
+  const currency = paymentData.currency || "HUF";
+  const { MERCHANT_KEY, MERCHANT_ID, SDK_VERSION, API_URL_TRANSACTION_CANCEL } =
+    getValidatedConfig(
+      "SimplePay/refundTransaction",
+      paymentData.currency as Currency,
+      {
+        paymentData,
+      },
+    );
+
+  if (
+    !paymentData.transactionId ||
+    paymentData.transactionId.trim().length !== 9 ||
+    isNaN(parseInt(paymentData.transactionId))
+  ) {
+    throw new Error("transactionId is required for refundTransaction");
+  }
+
+  const requestBody: SimplePayRefundTransactionRequestBody = {
+    salt: crypto.randomBytes(16).toString("hex"),
+    merchant: MERCHANT_ID!,
+    currency: currency.replace("_SZEP", "") as Currency,
+    sdkVersion: SDK_VERSION,
+    orderRef: paymentData.orderRef,
+    refundTotal: paymentData.refundTotal && !isNaN(Number(paymentData.refundTotal)) && Number(paymentData.refundTotal) > 0 ? Number(paymentData.refundTotal) : 0,
+  };
+
+  return makeSimplePayRefundTransactionRequest(
+    API_URL_TRANSACTION_CANCEL,
+    requestBody,
+    MERCHANT_KEY!,
+  );
+};
+
+export { startPayment, cancelTransaction, refundTransaction };

@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { CURRENCIES, Currency, ISO8601DateString, SimplePayAPIResult, SimplePayCancelCardRequestBody, SimplePayCancelCardResponse, SimplePayCancelTransactionRequestBody, SimplePayRecurringRequestBody, SimplePayRecurringResponse, SimplePayRequestBody, SimplePayResponse, SimplePayResult, SimplePayTokenRequestBody, SimplePayTokenResponse } from "./types"
+import { CURRENCIES, Currency, ISO8601DateString, SimplePayAPIResult, SimplePayCancelCardRequestBody, SimplePayCancelCardResponse, SimplePayCancelTransactionRequestBody, SimplePayRecurringRequestBody, SimplePayRecurringResponse, SimplePayRefundTransactionRequestBody, SimplePayRequestBody, SimplePayResponse, SimplePayResult, SimplePayTokenRequestBody, SimplePayTokenResponse } from "./types"
 
 export const simplepayLogger = (...args: any[]) => {
     if (process.env.SIMPLEPAY_LOGGER !== 'true') {
@@ -93,7 +93,20 @@ export const makeSimplePayCancelTransactionRequest = async (
   ) as Promise<SimplePayResponse>;
 };
 
-const makeRequest = async (apiUrl: string, requestBody: SimplePayRequestBody | SimplePayRecurringRequestBody | SimplePayTokenRequestBody | SimplePayCancelCardRequestBody | SimplePayCancelTransactionRequestBody, merchantKey: string, type: 'oneTime' | 'recurring' | 'token' | 'cancelCard' | 'cancelTransaction') => {
+export const makeSimplePayRefundTransactionRequest = async (
+  apiUrl: string,
+  requestBody: SimplePayRefundTransactionRequestBody,
+  merchantKey: string,
+) => {
+  return makeRequest(
+    apiUrl,
+    requestBody,
+    merchantKey,
+    "refundTransaction",
+  ) as Promise<SimplePayResponse>;
+};
+
+const makeRequest = async (apiUrl: string, requestBody: SimplePayRequestBody | SimplePayRecurringRequestBody | SimplePayTokenRequestBody | SimplePayCancelCardRequestBody | SimplePayCancelTransactionRequestBody | SimplePayRefundTransactionRequestBody, merchantKey: string, type: 'oneTime' | 'recurring' | 'token' | 'cancelCard' | 'cancelTransaction' | 'refundTransaction') => {
     const bodyString = prepareRequestBody(requestBody)
     const signature = generateSignature(bodyString, merchantKey)
     simplepayLogger({ function: `SimplePay/makeRequest/${type}`, bodyString, signature })
