@@ -30,6 +30,7 @@ export interface PaymentData {
     currency?: Currency
     language?: Language
     method?: PaymentMethod
+    transactionId?: string
     invoice?: {
         name: string
         country: string
@@ -73,12 +74,15 @@ export interface SimplePayRequestBody extends Omit<PaymentData, 'total'> {
     url: string
 }
 
-export interface SimplePayCancelTransactionRequestBody {
-    salt: string,
-    merchant: string,
-    transactionId: string,
-    currency: Currency,
-    sdkVersion: string
+export interface SimplePayCancelTransactionRequestBody extends Omit<
+  PaymentData,
+  "total" | "orderRef" | "customerEmail"
+> {
+  salt: string;
+  merchant: string;
+  transactionId: string;
+  currency: Currency;
+  sdkVersion: string;
 }
 
 export interface SimplePayRecurringRequestBody extends SimplePayRequestBody {
