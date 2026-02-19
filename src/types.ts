@@ -44,7 +44,8 @@ export interface PaymentData {
 }
 
 export interface PaymentConfig {
-    redirectUrl?: string
+    redirectUrl?: string,
+    timeout?: number // in minutes, default: 30
 }
 
 export type ISO8601DateString = string

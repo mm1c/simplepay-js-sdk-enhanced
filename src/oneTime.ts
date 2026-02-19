@@ -42,6 +42,9 @@ const startPayment = async (
   const { MERCHANT_KEY, MERCHANT_ID, API_URL_PAYMENT, SDK_VERSION } =
     getValidatedConfig("SimplePay/startPayment", currency, { paymentData });
 
+    const timeout =
+      config.timeout && config.timeout > 0 && config.timeout <= 120 ? config.timeout : 30;
+
   const requestBody: SimplePayRequestBody = {
     salt: crypto.randomBytes(16).toString("hex"),
     merchant: MERCHANT_ID!,
@@ -52,7 +55,7 @@ const startPayment = async (
     sdkVersion: SDK_VERSION,
     methods: [paymentData.method || "CARD"],
     total: String(paymentData.total),
-    timeout: toISO8601DateString(new Date(Date.now() + 30 * 60 * 1000)),
+    timeout: toISO8601DateString(new Date(Date.now() + timeout * 60 * 1000)),
     url:
       config.redirectUrl ||
       process.env.SIMPLEPAY_REDIRECT_URL ||
