@@ -1,20 +1,27 @@
 import crypto from 'crypto'
-import { Currency, PaymentConfig, PaymentData, SimplePayRequestBody } from './types'
-import { simplepayLogger, getSimplePayConfig, toISO8601DateString, makeSimplePayRequest } from './utils'
+import { Currency, PaymentConfig, PaymentData, SimplePayCancelTransactionRequestBody, SimplePayRequestBody } from './types'
+import { simplepayLogger, getSimplePayConfig, toISO8601DateString, makeSimplePayRequest, makeSimplePayCancelTransactionRequest } from './utils'
 
-const startPayment = async (paymentData: PaymentData, config: PaymentConfig = {}) => {
-    simplepayLogger({ function: 'SimplePay/startPayment', paymentData })
-    const currency = paymentData.currency || 'HUF'
-    const { MERCHANT_KEY, MERCHANT_ID, API_URL_PAYMENT, SDK_VERSION } = getSimplePayConfig(currency)
-    simplepayLogger({ function: 'SimplePay/startPayment', MERCHANT_KEY, MERCHANT_ID, API_URL_PAYMENT })
+const getValidatedConfig = (fnName: string, currency: Currency, logExtra: Record<string, unknown> = {}) => {
+    simplepayLogger({ function: fnName, ...logExtra })
+    const config = getSimplePayConfig(currency)
+    simplepayLogger({ function: fnName, MERCHANT_KEY: config.MERCHANT_KEY, MERCHANT_ID: config.MERCHANT_ID })
 
-    if (!MERCHANT_KEY || !MERCHANT_ID) {
+    if (!config.MERCHANT_KEY || !config.MERCHANT_ID) {
         throw new Error(`Missing SimplePay configuration for ${currency}`)
     }
 
+    return config
+}
+
+const startPayment = async (paymentData: PaymentData, config: PaymentConfig = {}) => {
+    const currency = paymentData.currency || 'HUF'
+    const { MERCHANT_KEY, MERCHANT_ID, API_URL_PAYMENT, SDK_VERSION } =
+        getValidatedConfig('SimplePay/startPayment', currency, { paymentData })
+
     const requestBody: SimplePayRequestBody = {
         salt: crypto.randomBytes(16).toString('hex'),
-        merchant: MERCHANT_ID,
+        merchant: MERCHANT_ID!,
         orderRef: paymentData.orderRef,
         currency: currency.replace('_SZEP', '') as Currency,
         customerEmail: paymentData.customerEmail,
@@ -27,7 +34,26 @@ const startPayment = async (paymentData: PaymentData, config: PaymentConfig = {}
         invoice: paymentData.invoice,
     }
 
-    return makeSimplePayRequest(API_URL_PAYMENT, requestBody, MERCHANT_KEY)
+    return makeSimplePayRequest(API_URL_PAYMENT, requestBody, MERCHANT_KEY!)
 }
 
-export { startPayment }
+const cancelTransaction = async (transactionId: string, currency: Currency) => {
+    const { MERCHANT_KEY, MERCHANT_ID, SDK_VERSION, API_URL_TRANSACTION_CANCEL } =
+        getValidatedConfig('SimplePay/cancelTransaction', currency, { transactionId, currency })
+
+    const requestBody: SimplePayCancelTransactionRequestBody = {
+        salt: crypto.randomBytes(16).toString("hex"),
+        merchant: MERCHANT_ID!,
+        currency: currency.replace("_SZEP", "") as Currency,
+        sdkVersion: SDK_VERSION,
+        transactionId,
+    };
+
+    return makeSimplePayCancelTransactionRequest(
+        API_URL_TRANSACTION_CANCEL,
+        requestBody,
+        MERCHANT_KEY!,
+    );
+}
+
+export { startPayment, cancelTransaction }

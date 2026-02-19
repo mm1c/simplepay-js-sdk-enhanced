@@ -73,6 +73,14 @@ export interface SimplePayRequestBody extends Omit<PaymentData, 'total'> {
     url: string
 }
 
+export interface SimplePayCancelTransactionRequestBody {
+    salt: string,
+    merchant: string,
+    transactionId: string,
+    currency: Currency,
+    sdkVersion: string
+}
+
 export interface SimplePayRecurringRequestBody extends SimplePayRequestBody {
     customer: string
     recurring: Recurring
