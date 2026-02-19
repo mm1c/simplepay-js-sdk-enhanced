@@ -26,7 +26,8 @@
     "test": "vitest --run",
     "test:watch": "vitest",
     "release": "bash ./release.sh $@",
-    "generate-signature": "node tools/generate-signature.js"
+    "generate-signature": "node tools/generate-signature.js",
+    "prepare": "npm run build"
   },
   "keywords": [
     "simplepay",
