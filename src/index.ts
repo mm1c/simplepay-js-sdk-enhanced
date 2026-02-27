@@ -14,6 +14,7 @@ import type {
   SimplePayCancelCardResponse,
   SimplePayResult,
   SimplePayIPNResponse,
+  PaymentData,
 } from "./types";
 import {
   checkSignature,
@@ -33,6 +34,7 @@ export {
   SimplePayCancelCardResponse,
   SimplePayResult,
   SimplePayIPNResponse,
+  PaymentData,
   checkSignature,
   generateSignature,
   toISO8601DateString,
